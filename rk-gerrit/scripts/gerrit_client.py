@@ -4,6 +4,7 @@ Gerrit SSH client for Rockchip internal Gerrit.
 """
 
 import json
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -28,7 +29,8 @@ class GerritSSHClient:
             f"https://{self.server}/c/{{project}}/+/{{number}}",
         )
 
-    def _run_ssh_command(self, gerrit_cmd: str) -> str:
+    def _run_ssh_command(self, gerrit_args: List[str]) -> str:
+        remote_cmd = shlex.join(["gerrit", *gerrit_args])
         cmd = [
             "ssh",
             "-p",
@@ -42,7 +44,7 @@ class GerritSSHClient:
             "-o",
             "LogLevel=ERROR",
             f"{self.username}@{self.server}",
-            f"gerrit {gerrit_cmd}",
+            remote_cmd,
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
         if result.returncode != 0:
@@ -65,7 +67,7 @@ class GerritSSHClient:
 
     def search_changes(self, query: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         limit = limit or self.default_limit
-        cmd = f'query --format=JSON --commit-message "{query}" limit:{limit}'
+        cmd = ["query", "--format=JSON", query, f"limit:{limit}"]
         return self._parse_json_lines(self._run_ssh_command(cmd))
 
     def get_change_detail(
@@ -95,8 +97,7 @@ class GerritSSHClient:
         if include_commit_message:
             flags.append("--commit-message")
 
-        flags_text = " ".join(flags)
-        cmd = f"query --format=JSON {flags_text} change:{change_id}".strip()
+        cmd = ["query", "--format=JSON", *flags, f"change:{change_id}"]
         results = self._parse_json_lines(self._run_ssh_command(cmd))
         if not results:
             raise ValueError(f"Change {change_id} not found")
@@ -114,14 +115,14 @@ class GerritSSHClient:
         )
 
     def list_projects(self, prefix: Optional[str] = None) -> List[str]:
-        cmd = "ls-projects"
+        cmd = ["ls-projects"]
         if prefix:
-            cmd += f" --prefix {prefix}"
+            cmd.extend(["--prefix", prefix])
         output = self._run_ssh_command(cmd)
         return [line.strip() for line in output.splitlines() if line.strip()]
 
     def get_version(self) -> str:
-        return self._run_ssh_command("version").strip()
+        return self._run_ssh_command(["version"]).strip()
 
 
 def main() -> None:

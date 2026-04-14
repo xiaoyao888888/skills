@@ -115,6 +115,25 @@ def print_submit_records(change: Dict[str, Any]) -> None:
             print(f"    - {label.get('label', 'N/A')}: {label.get('status', 'N/A')}")
 
 
+def print_patch_sets(change: Dict[str, Any]) -> None:
+    patch_sets = change.get("patchSets", [])
+    if not patch_sets:
+        return
+
+    print(f"\nPatch Sets ({len(patch_sets)}):")
+    for patch_set in patch_sets:
+        approvals = patch_set.get("approvals", [])
+        approvals_text = ", ".join(
+            f"{approval.get('type', 'N/A')}{approval.get('value', 'N/A')}" for approval in approvals
+        )
+        suffix = f" | Approvals: {approvals_text}" if approvals_text else ""
+        print(
+            f"  - PS{patch_set.get('number', 'N/A')} "
+            f"{patch_set.get('kind', 'N/A')} "
+            f"{patch_set.get('revision', 'N/A')}{suffix}"
+        )
+
+
 def print_current_ps_approvals(change: Dict[str, Any]) -> None:
     approvals = change.get("currentPatchSet", {}).get("approvals", [])
     if not approvals:
@@ -170,23 +189,27 @@ def query_by_id(
     show_patch_sets: bool = False,
     show_commit_message: bool = False,
     show_timeline: bool = False,
+    change: Dict[str, Any] = None,
 ) -> None:
-    change = client.get_change_detail(
-        change_id,
-        include_current_patch_set=True,
-        include_patch_sets=show_patch_sets,
-        include_files=show_files,
-        include_comments=show_comments or show_timeline,
-        include_all_approvals=show_approvals,
-        include_submit_records=show_submit_records,
-        include_commit_message=show_commit_message,
-    )
+    if change is None:
+        change = client.get_change_detail(
+            change_id,
+            include_current_patch_set=True,
+            include_patch_sets=show_patch_sets,
+            include_files=show_files,
+            include_comments=show_comments or show_timeline,
+            include_all_approvals=show_approvals,
+            include_submit_records=show_submit_records,
+            include_commit_message=show_commit_message,
+        )
 
     print_basic_metadata(change)
     print_current_patch_set(change)
 
     if show_files:
         print_changed_files(change)
+    if show_patch_sets:
+        print_patch_sets(change)
     if show_submit_records:
         print_submit_records(change)
     if show_approvals:
@@ -249,6 +272,7 @@ def main() -> None:
                 show_patch_sets=args.patch_sets,
                 show_commit_message=args.commit_message,
                 show_timeline=args.timeline,
+                change=change,
             )
         return
 
