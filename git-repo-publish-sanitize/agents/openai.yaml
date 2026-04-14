@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Repo Publish & Sanitize"
+  short_description: "Publish repos cleanly and remove leaked history"
+  default_prompt: "Use $git-repo-publish-sanitize to initialize this directory, audit secrets, and publish a clean GitHub repository without using temporary directories."
