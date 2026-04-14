@@ -1,0 +1,4 @@
+interface:
+  display_name: "Module Notes Maintainer"
+  short_description: "Keep AGENTS, notes, and handover disciplined"
+  default_prompt: "Use $module-notes-maintainer to place verified work in the right note layer, decide whether handover needs an update, and keep docs concise without chat residue."

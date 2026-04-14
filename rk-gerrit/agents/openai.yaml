@@ -1,0 +1,4 @@
+interface:
+  display_name: "RK Gerrit"
+  short_description: "Login, query, and triage RK Gerrit changes"
+  default_prompt: "Use $rk-gerrit to check Rockchip Gerrit access, inspect a Change-Id, and summarize what still needs action."

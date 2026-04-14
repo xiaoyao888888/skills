@@ -1,0 +1,8 @@
+{
+  "server": "10.10.10.29",
+  "port": 29418,
+  "username": "robot_verifier",
+  "key_file": "robot_verifier",
+  "default_limit": 20,
+  "web_url_template": "https://10.10.10.29/c/{project}/+/{number}"
+}
